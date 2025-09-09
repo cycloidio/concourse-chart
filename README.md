@@ -87,7 +87,7 @@ The following table lists the configurable parameters of the Concourse chart and
 | `imageDigest` | Specific image digest to use in place of a tag. | `nil` |
 | `imagePullPolicy` | Concourse image pull policy | `IfNotPresent` |
 | `imagePullSecrets` | Array of imagePullSecrets in the namespace for pulling images | `[]` |
-| `imageTag` | Concourse image version | `7.13.2` |
+| `imageTag` | Concourse image version | `7.14.1` |
 | `image` | Concourse image | `concourse/concourse` |
 | `nameOverride` | Provide a name in place of `concourse` for `app:` labels | `nil` |
 | `persistence.enabled` | Enable Concourse persistence using Persistent Volume Claims | `true` |
@@ -96,14 +96,39 @@ The following table lists the configurable parameters of the Concourse chart and
 | `persistence.worker.storageClass` | Concourse Worker Persistent Volume Storage Class | `generic` |
 | `persistence.worker.labels` | Concourse Worker Persistent Volume Labels | `{}` |
 | `postgresql.enabled` | Enable PostgreSQL as a chart dependency | `true` |
-| `postgresql.persistence.accessModes` | Persistent Volume Access Mode | `["ReadWriteOnce"]` |
+| `postgresql.fullnameOverride` | Provide a name to substitute for the full name of postgresql resources | `nil` |
+| `postgresql.labels` | Add additionnal labels to the postgresql statefulSet | `{}` |
+| `postgresql.service.enabled` | Enable postgresql service | `true` |
+| `postgresql.service.type` | Service type | `ClusterIP` |
+| `postgresql.service.clusterIPs` | Hardcode services IPs | `[]` |
+| `postgresql.service.extraSpec` | Add extra `spec` attributes to the postgresql service. | `{}` |
+| `postgresql.image` | Set the image repository | `postgres` |
+| `postgresql.imageTag` | Set the image tag, exclusive with imageDigest. | `17` |
+| `postgresql.imageDigest` | Set the image tag, exclusive with the imageTag | `""` |
+| `postgresql.version` | Set the postgresql major version, must match the one of your image. | `17` |
+| `postgresql.customPgData` | Customize the PG_DATA path, defaults to `/var/lib/postgres/{{postgresql.version}}/docker`. Ajust the dataVolumeMountPath to match with the new PG_DATA. e.g `/opt/postgresql/data` | `"17"` |
+| `postgresql.dataVolumeMountPath` | The mountPath of the volume that will contains the PG_DATA e.g `/opt/postgresql` | `nil` |
+| `postgresql.securityContext` | Add securityContext attributes to the statefulSet | `nil` |
+| `postgresql.annotations` | Add annotations to the postgresql statefulset | `nil` |
+| `postgresql.secretAnnotations` | Add annotations to the secret | `nil` |
+| `postgresql.configMapAnnotations` | Add annotations to the environment configmap | `nil` |
+| `postgresql.configOverride` | Override the default postgresql config file | `nil` |
+| `postgresql.resources` | Set the resources for the statefulSet | `{"requests":{"cpu":"250m","ephemeral-storage":"50Mi","memory":"256Mi"},"limits":{"cpu":"500m","ephemeral-storage":"2Gi","memory":"512Mi"}}` |
+| `postgresql.auth.user` | Set the postgres user | `concourse` |
+| `postgresql.auth.password` | Set the postgres password | `concourse` |
+| `postgresql.auth.database` | Set the postgres database name | `concourse` |
+| `postgresql.extraEnvironment` | Add extra arguments to the postgresql command | `{}` |
+| `postgresql.extraArgs` | Add extra environement variables | `{}` |
+| `postgresql.commandOverride` | Override the command of postgres | `[]` |
+| `postgresql.argsOverride` | Override the args of postgres | `[]` |
+| `postgresql.sensitiveEnvironment` | Add extra sensitive env vars (will be injected with a secret) | `{}` |
+| `postgresql.lifecycle` | Add a lifecycle attribute to the postgresql container, see [the k8s docs](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#lifecycle) | `nil` |
 | `postgresql.persistence.enabled` | Enable PostgreSQL persistence using Persistent Volume Claims | `true` |
-| `postgresql.persistence.size` | Persistent Volume Storage Size | `8Gi` |
+| `postgresql.persistence.pvcNameOverride` | Override the name of the pvc template in the postgresql statefulSet. Useful to re-use an existing pvc. | `""` |
 | `postgresql.persistence.storageClass` | Concourse data Persistent Volume Storage Class | `nil` |
+| `postgresql.persistence.accessModes` | Persistent Volume Access Mode | `["ReadWriteOnce"]` |
+| `postgresql.persistence.resources` | Set storage requests and limits | `{ "requests": { "storage": "8Gi" } }` |
 | `persistence.worker.selector` | Concourse Worker Persistent Volume selector | `nil` |
-| `postgresql.auth.database` | PostgreSQL Database to create | `concourse` |
-| `postgresql.auth.password` | PostgreSQL Password for the new user | `concourse` |
-| `postgresql.auth.username` | PostgreSQL User to create | `concourse` |
 | `rbac.apiVersion` | RBAC version | `v1beta1` |
 | `rbac.create` | Enables creation of RBAC resources | `true` |
 | `rbac.webServiceAccountName` | Name of the service account to use for web pods if `rbac.create` is `false` | `default` |
@@ -198,6 +223,11 @@ The following table lists the configurable parameters of the Concourse chart and
 | `web.ingress.ingressClassName` | IngressClass to register to | `nil` |
 | `web.ingress.rulesOverride` | Concourse Web Ingress rules (override) (alternate to `web.ingress.hosts`) | `[]` |
 | `web.ingress.tls` | Concourse Web Ingress TLS configuration | `[]` |
+| `web.route.annotations` | Concourse Web HTTPRoute annotations | `{}` |
+| `web.route.enabled` | Enable Concourse Web HTTPRoute | `false` |
+| `web.route.hostnames` | Concourse Web HTTPRoutes Hostnames | `[]` |
+| `web.route.parentRefs` | Concourse Web HTTPRoute parentRefs (gateways) | `[]` |
+| `web.route.labels` | Concourse Web HTTPRoute labels | `[]` |
 | `web.keySecretsPath` | Specify the mount directory of the web keys secrets | `/concourse-keys` |
 | `web.labels`| Additional labels to be added to the web deployment `metadata.labels` | `{}` |
 | `web.deploymentAnnotations` | Additional annotations to be added to the web deployment `metadata.annotations` | `{}` |
@@ -289,6 +319,7 @@ The following table lists the configurable parameters of the Concourse chart and
 | `worker.priorityClassName` | Sets a PriorityClass for the worker pods | `nil` |
 | `worker.terminationGracePeriodSeconds` | Upper bound for graceful shutdown to allow the worker to drain its tasks | `60` |
 | `worker.tolerations` | Tolerations for the worker nodes | `[]` |
+| `worker.persistentVolumeClaimRetentionPolicy` | `Retain` or `Delete` (requires Kubernetes >= 1.32) | `Retain` |
 | `worker.updateStrategy` | `OnDelete` or `RollingUpdate` (requires Kubernetes >= 1.7) | `RollingUpdate` |
 
 For configurable Concourse parameters, refer to [`values.yaml`](values.yaml)' `concourse` section. All parameters under this section are strictly mapped from the `concourse` binary commands.
@@ -512,7 +543,7 @@ web:
 
 ### PostgreSQL
 
-By default, this chart uses a PostgreSQL database deployed as a chart dependency (see the [PostgreSQL chart](https://github.com/bitnami/charts/blob/master/bitnami/postgresql/README.md)), with default values for username, password, and database name. These can be modified by setting the `postgresql.auth.*` values.
+By default, this chart deploys a single postgresql instance as a statefulSet, the conection details will be shared with concourse. You can change the connection details using the attributes of the `postgresql.auth`.
 
 You can also bring your own PostgreSQL. To do so, set `postgresql.enabled` to `false`, and then configure Concourse's `postgres` values (`concourse.web.postgres.*`) See [values.yaml](values.yaml).
 
@@ -769,3 +800,25 @@ Instead, you may add a comment specifying the default, such as
 This prevents the behaviour drifting from that of the binary in case the binary's default values change.
 
 We understand that the comment stating the binary's default can become stale. The current solution is a suboptimal one. It may be improved in the future by generating a list of the default values from the binary.
+
+## Helm Unit Test
+
+When running unit tests for helm, from the root of the repository, you can simply run the following.
+
+```bash
+helm unittest -f test/unittest/**/*.yaml .
+```
+
+If you are debugging specific tests, simply target the folder or yaml file you want to run tests on.
+
+`Folder`
+
+```bash
+helm unittest -f test/unittest/gateway-apis/*.yaml .
+```
+
+`Specific Test Suite`
+
+```bash
+helm unittest -f test/unittest/gateway-apis/web-route-test.yaml .
+```

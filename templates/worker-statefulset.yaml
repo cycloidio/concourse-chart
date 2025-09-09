@@ -1,6 +1,6 @@
 {{- if .Values.worker.enabled -}}
 {{- if eq .Values.worker.kind "StatefulSet" }}
-apiVersion: {{ template "concourse.statefulset.apiVersion" . }}
+apiVersion: {{ template "concourse.statefulSet.apiVersion" . }}
 kind: StatefulSet
 metadata:
   name: {{ template "concourse.worker.fullname" . }}
@@ -230,6 +230,10 @@ spec:
             sizeLimit: {{ .Values.worker.emptyDirSize | quote }}
             {{- end }}
       {{- end }}
+  {{- end }}
+  {{ if semverCompare ">=1.32-0" .Capabilities.KubeVersion.Version -}}
+  persistentVolumeClaimRetentionPolicy:
+{{ toYaml .Values.worker.persistentVolumeClaimRetentionPolicy | indent 4 }}
   {{- end }}
   {{- if semverCompare "^1.7-0" .Capabilities.KubeVersion.Version }}
   updateStrategy:
